@@ -1,5 +1,3 @@
-import Foundation
-
 enum IslandState: Equatable {
     case collapsed   // 与刘海融为一体
     case expanded    // 悬停展开的面板
