@@ -121,7 +121,6 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
             URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
                 let image = data.flatMap(NSImage.init(data:))
                 self?.queue.async {
-                    // 同步路径下该守卫当前恒真，仅作为未来改异步时的防御
                     guard self?.lastArtworkKey == key else { return }
                     DispatchQueue.main.async { self?.onArtwork?(image) }
                 }
@@ -130,6 +129,7 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
             // Apple Music：封面走 artwork data 查询，失败则降级为 nil（UI 显示占位图标）
             let image = (try? runner.run(Self.musicArtworkScript))
                 .flatMap { $0.data.isEmpty ? nil : NSImage(data: $0.data) }
+            // 同步路径下该守卫当前恒真，仅作为未来改异步时的防御
             guard lastArtworkKey == key else { return }
             DispatchQueue.main.async { [weak self] in self?.onArtwork?(image) }
         } else {
