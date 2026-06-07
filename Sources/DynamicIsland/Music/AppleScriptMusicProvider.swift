@@ -72,6 +72,7 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
                 publishNothingPlaying()
                 return
             }
+            permissionReported = false   // 授权已恢复：用户再次撤销时提示需能重新出现
             publish(info)
             fetchArtworkIfNeeded(for: info)
         } catch ScriptError.permissionDenied {
