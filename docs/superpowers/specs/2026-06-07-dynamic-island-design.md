@@ -51,7 +51,7 @@ lindongdao/
   SwiftUI 弹簧动画。悬停检测用 tracking area / `onHover`。
 - **NowPlayingProvider（Music）**：协议定义"读取当前曲目（标题/歌手/封面/进度/播放中）+
   控制（播放暂停/上一首/下一首）"。第一版实现 `AppleScriptMusicProvider`：每 2 秒轮询
-  Apple Music 与 Spotify（谁在播放用谁）。
+  Apple Music 与 Spotify（谁在播放用谁；两者同时播放时优先 Spotify，因 Music 常驻后台易误判）。
   不用系统级 MediaRemote 私有框架的原因：macOS 15.4 起 Apple 收紧其访问权限，方案复杂且脆弱；
   协议已留出扩展点，后续可新增系统级实现而不动 UI。
 - **ShelfStore（Shelf）**：管理文件**引用**列表（不复制文件本体）。上限 10 项；
