@@ -26,6 +26,13 @@ swift run lindongdao    # Ctrl+C 退出
 首次控制音乐时系统会请求"自动化"权限，请允许。误拒后到
 系统设置 → 隐私与安全性 → 自动化 中重新开启。
 
+注意：每次重新打包（ad-hoc 签名变化）可能使已授予的自动化权限失效，
+且部分系统版本表现为静默拒绝而非重新弹框。若重打包后音乐功能异常，先执行：
+
+```bash
+tccutil reset AppleEvents io.github.ljk20041215.lindongdao
+```
+
 ## 测试
 
 ```bash
