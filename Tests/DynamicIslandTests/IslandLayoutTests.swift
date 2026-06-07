@@ -22,4 +22,13 @@ final class IslandLayoutTests: XCTestCase {
         let r = IslandLayout.expandedWindowRect(notch: wideNotch)
         XCTAssertGreaterThanOrEqual(r.width, IslandLayout.collapsedWindowRect(notch: wideNotch).width)
     }
+
+    func testWindowRectDispatchesByState() {
+        XCTAssertEqual(IslandLayout.windowRect(for: .collapsed, notch: notch),
+                       IslandLayout.collapsedWindowRect(notch: notch))
+        XCTAssertEqual(IslandLayout.windowRect(for: .expanded, notch: notch),
+                       IslandLayout.expandedWindowRect(notch: notch))
+        XCTAssertEqual(IslandLayout.windowRect(for: .dropTarget, notch: notch),
+                       IslandLayout.expandedWindowRect(notch: notch))
+    }
 }

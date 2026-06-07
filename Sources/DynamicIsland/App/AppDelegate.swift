@@ -2,7 +2,8 @@ import AppKit
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var window: NotchWindow?
+    private var controller: IslandWindowController?
+    private let islandVM = IslandViewModel()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let geometry = NotchGeometry.fromBestScreen() else {
@@ -10,11 +11,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.terminate(nil)
             return
         }
-        let rect = IslandLayout.collapsedWindowRect(notch: geometry.notchRect)
-        let w = NotchWindow(contentRect: rect)
-        // 临时内容：纯黑填充验证窗口位置盖住刘海。Task 5 替换为 IslandRootView。
-        w.contentView = NSHostingView(rootView: Color.black)
-        w.orderFrontRegardless()
-        window = w
+        let controller = IslandWindowController(geometry: geometry)
+        islandVM.onStateChange = { [weak controller] state in
+            controller?.apply(state: state)
+        }
+        controller.show(content: IslandRootView(
+            viewModel: islandVM,
+            notchSize: geometry.notchRect.size))
+        self.controller = controller
     }
 }
