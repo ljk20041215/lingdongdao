@@ -39,4 +39,19 @@ final class IslandStateMachineTests: XCTestCase {
         XCTAssertEqual(m.handle(.hoverChanged(false)), .collapsed)   // 收起时移出鼠标：不变
         XCTAssertEqual(m.handle(.dropCompleted), .collapsed)         // 收起时收到 drop 完成：不变
     }
+
+    // 拖拽中 onHover 可能闪 false：dropTarget 不得因此收起
+    func testHoverExitDoesNotLeaveDropTarget() {
+        var m = IslandStateMachine()
+        _ = m.handle(.dragTargetingChanged(true))
+        XCTAssertEqual(m.handle(.hoverChanged(false)), .dropTarget)
+    }
+
+    // 投放完成展开后，延迟到达的拖拽离开事件不得收起面板
+    func testLateDragExitDoesNotCollapseAfterDrop() {
+        var m = IslandStateMachine()
+        _ = m.handle(.dragTargetingChanged(true))
+        _ = m.handle(.dropCompleted)
+        XCTAssertEqual(m.handle(.dragTargetingChanged(false)), .expanded)
+    }
 }
