@@ -8,6 +8,7 @@ final class IslandWindowController {
     let window: NotchWindow
     let geometry: NotchGeometry
     private var currentState: IslandState = .collapsed
+    private var pendingShrink: DispatchWorkItem?
 
     init(geometry: NotchGeometry) {
         self.geometry = geometry
@@ -22,12 +23,16 @@ final class IslandWindowController {
 
     func apply(state: IslandState) {
         currentState = state
+        pendingShrink?.cancel()
         let target = IslandLayout.windowRect(for: state, notch: geometry.notchRect)
         if state == .collapsed {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            // 等 SwiftUI 收起动画播完再缩小窗口；新状态到来时取消，避免陈旧任务裁剪动画
+            let work = DispatchWorkItem { [weak self] in
                 guard let self, self.currentState == .collapsed else { return }
                 self.window.setFrame(target, display: true)
             }
+            pendingShrink = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
         } else {
             window.setFrame(target, display: true)
         }
