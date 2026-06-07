@@ -2,15 +2,16 @@ import SwiftUI
 
 struct IslandRootView: View {
     @ObservedObject var viewModel: IslandViewModel
+    @ObservedObject var musicVM: MusicViewModel
     let notchSize: CGSize
 
     var body: some View {
         VStack(spacing: 0) {
             switch viewModel.state {
             case .collapsed:
-                CollapsedIslandView(notchSize: notchSize)
+                CollapsedIslandView(notchSize: notchSize, musicVM: musicVM)
             case .expanded, .dropTarget:
-                ExpandedPanelView()
+                ExpandedPanelView(musicVM: musicVM)
             }
             Spacer(minLength: 0)
         }
