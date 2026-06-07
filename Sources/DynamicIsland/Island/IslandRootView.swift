@@ -28,11 +28,11 @@ struct IslandRootView: View {
         .onHover { viewModel.send(.hoverChanged($0)) }
         // 文件拖到岛的任何位置：悬停 → dropTarget 态展开；松手 → 入架
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
-            viewModel.dropStarted()
+            // 同步切换状态：不依赖异步解析的时序，松手即保持展开
+            viewModel.send(.dropCompleted)
             Self.loadFileURLs(from: providers) { urls in
                 let rejected = shelf.add(urls: urls)
                 if !rejected.isEmpty { shakeTrigger += 1 }   // 满架抖动
-                viewModel.send(.dropCompleted)
             }
             return true
         }

@@ -31,8 +31,4 @@ final class IslandViewModel: ObservableObject {
         }
     }
 
-    /// 用户已松手投放：取消待生效的"拖拽离开"防抖，等待 dropCompleted 接管状态
-    func dropStarted() {
-        pendingDragExit?.cancel()
-    }
 }
