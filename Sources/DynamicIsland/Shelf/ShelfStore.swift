@@ -59,7 +59,7 @@ final class ShelfStore: ObservableObject {
         try? FileManager.default.createDirectory(
             at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(items) {
-            try? data.write(to: storeURL)
+            try? data.write(to: storeURL, options: .atomic)   // 原子写入：中断不会留下截断文件
         }
     }
 

@@ -68,4 +68,15 @@ final class ShelfStoreTests: XCTestCase {
         XCTAssertFalse(store.isMissing(store.items[0]))
         XCTAssertTrue(store.isMissing(store.items[1]))
     }
+
+    // 损坏的 shelf.json 应静默回退为空架，且下次保存自愈（spec 错误处理：不崩溃）
+    func testCorruptStoreFileFallsBackToEmpty() {
+        let storeURL = tempDir.appendingPathComponent("shelf.json")
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try? Data("not json{{".utf8).write(to: storeURL)
+        let store = makeStore()
+        XCTAssertTrue(store.items.isEmpty)
+        store.add(urls: [url("a.txt")])
+        XCTAssertEqual(makeStore().items.map(\.url), [url("a.txt")])   // 保存自愈
+    }
 }
