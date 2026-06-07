@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: IslandWindowController?
     private let islandVM = IslandViewModel()
     private let musicVM = MusicViewModel(provider: AppleScriptMusicProvider())
+    private let shelf = ShelfStore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let geometry = NotchGeometry.fromBestScreen() else {
@@ -19,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.show(content: IslandRootView(
             viewModel: islandVM,
             musicVM: musicVM,
+            shelf: shelf,
             notchSize: geometry.notchRect.size))
         self.controller = controller
 
