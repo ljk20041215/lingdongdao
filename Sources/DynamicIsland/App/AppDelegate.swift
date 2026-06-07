@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let islandVM = IslandViewModel()
     private let musicVM = MusicViewModel(provider: AppleScriptMusicProvider())
     private let shelf = ShelfStore()
+    private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let geometry = NotchGeometry.fromBestScreen() else {
@@ -25,5 +26,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.controller = controller
 
         musicVM.start()
+        setupStatusItem()
+    }
+
+    private func setupStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = NSImage(systemSymbolName: "capsule.fill",
+                                     accessibilityDescription: "lindongdao")
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "退出 lindongdao",
+                                action: #selector(NSApplication.terminate(_:)),
+                                keyEquivalent: "q"))
+        item.menu = menu
+        statusItem = item
     }
 }
