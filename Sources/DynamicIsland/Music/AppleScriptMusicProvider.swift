@@ -43,7 +43,11 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
     private func control(_ command: String) {
         queue.async { [weak self] in
             guard let self, let app = self.activePlayerApp() else { return }
-            _ = try? self.runner.run("tell application \"\(app)\" to \(command)")
+            do {
+                _ = try self.runner.run("tell application \"\(app)\" to \(command)")
+            } catch ScriptError.permissionDenied {
+                self.reportPermissionDenied()
+            } catch {}
             self.poll()   // 立即刷新，不等下个轮询周期
         }
     }
@@ -52,27 +56,29 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
 
     private func poll() {
         guard let app = activePlayerApp() else {
-            publish(nil)
+            publishNothingPlaying()
             return
         }
         do {
             let script = app == "Spotify" ? Self.spotifyScript : Self.musicScript
             let raw = try runner.run(script).stringValue ?? ""
+            if raw == "PERM_DENIED" {
+                reportPermissionDenied()
+                publishNothingPlaying()
+                return
+            }
             let source: NowPlayingInfo.Source = app == "Spotify" ? .spotify : .music
             guard let info = NowPlayingParser.parse(raw, source: source) else {
-                publish(nil)
+                publishNothingPlaying()
                 return
             }
             publish(info)
             fetchArtworkIfNeeded(for: info)
         } catch ScriptError.permissionDenied {
-            if !permissionReported {
-                permissionReported = true
-                DispatchQueue.main.async { [weak self] in self?.onPermissionDenied?() }
-            }
-            publish(nil)
+            reportPermissionDenied()
+            publishNothingPlaying()
         } catch {
-            publish(nil)
+            publishNothingPlaying()
         }
     }
 
@@ -91,6 +97,18 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
         DispatchQueue.main.async { [weak self] in self?.onUpdate?(info) }
     }
 
+    /// 停止播放时同时清掉封面 key：VM 已把封面清空，下次同一首歌需要重新获取
+    private func publishNothingPlaying() {
+        lastArtworkKey = nil
+        publish(nil)
+    }
+
+    private func reportPermissionDenied() {
+        guard !permissionReported else { return }
+        permissionReported = true
+        DispatchQueue.main.async { [weak self] in self?.onPermissionDenied?() }
+    }
+
     // MARK: - 封面
 
     private func fetchArtworkIfNeeded(for info: NowPlayingInfo) {
@@ -103,6 +121,7 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
             URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
                 let image = data.flatMap(NSImage.init(data:))
                 self?.queue.async {
+                    // 同步路径下该守卫当前恒真，仅作为未来改异步时的防御
                     guard self?.lastArtworkKey == key else { return }
                     DispatchQueue.main.async { self?.onArtwork?(image) }
                 }
@@ -128,7 +147,8 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
             set t to current track
             return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & ((duration of t) / 1000 as text) & "\\n" & (player state as text) & "\\n" & artwork url of t
         end tell
-    on error
+    on error msg number n
+        if n is -1743 then return "PERM_DENIED"
         return ""
     end try
     """
@@ -140,7 +160,8 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
             set t to current track
             return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & (duration of t as text) & "\\n" & (player state as text) & "\\n"
         end tell
-    on error
+    on error msg number n
+        if n is -1743 then return "PERM_DENIED"
         return ""
     end try
     """
