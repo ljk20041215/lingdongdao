@@ -8,7 +8,9 @@ enum NowPlayingParser {
         let lines = raw.components(separatedBy: "\n")
         guard lines.count >= 5 else { return nil }
         guard let position = parseNumber(lines[2]),
-              let duration = parseNumber(lines[3]) else { return nil }
+              let duration = parseNumber(lines[3]),
+              position.isFinite, duration.isFinite,
+              position >= 0, duration >= 0 else { return nil }
         let state = lines[4].trimmingCharacters(in: .whitespaces).lowercased()
         let artworkRaw = lines.count >= 6 ? lines[5].trimmingCharacters(in: .whitespaces) : ""
         return NowPlayingInfo(

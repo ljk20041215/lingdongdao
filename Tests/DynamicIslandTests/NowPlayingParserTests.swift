@@ -33,4 +33,10 @@ final class NowPlayingParserTests: XCTestCase {
         XCTAssertNil(NowPlayingParser.parse("only\nthree\nlines", source: .spotify))
         XCTAssertNil(NowPlayingParser.parse("t\na\nNaN??\n200\nplaying\n", source: .spotify))
     }
+
+    func testNonFiniteOrNegativeNumbersReturnNil() {
+        XCTAssertNil(NowPlayingParser.parse("t\na\nnan\n200\nplaying\n", source: .music))
+        XCTAssertNil(NowPlayingParser.parse("t\na\ninf\n200\nplaying\n", source: .music))
+        XCTAssertNil(NowPlayingParser.parse("t\na\n-5\n200\nplaying\n", source: .music))
+    }
 }

@@ -12,6 +12,8 @@ final class MusicViewModel: ObservableObject {
         provider.onUpdate = { [weak self] info in
             self?.info = info
             if info == nil { self?.artwork = nil }
+            // 拿到真实数据说明授权已恢复，清除过期的授权提示
+            if info != nil { self?.needsAutomationPermission = false }
         }
         provider.onArtwork = { [weak self] image in self?.artwork = image }
         provider.onPermissionDenied = { [weak self] in
