@@ -6,7 +6,7 @@ struct ShelfPanelView: View {
     @ObservedObject var store: ShelfStore
     let isDropTarget: Bool
 
-    private let columns = Array(repeating: GridItem(.fixed(56), spacing: 10), count: 5)
+    private let columns = Array(repeating: GridItem(.fixed(56), spacing: 10), count: 4)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -25,6 +25,7 @@ struct ShelfPanelView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.horizontal, 16)
         .overlay {
             if isDropTarget {
                 RoundedRectangle(cornerRadius: 12)
