@@ -4,12 +4,8 @@ import Foundation
 enum IslandLayout {
     /// 收起态每侧露出的"翼"宽度（迷你封面 / 波形）
     static let chipWidth: CGFloat = 56
-    /// 展开面板尺寸。文件架下线时只放音乐，面板收窄（见 FeatureFlags.shelfEnabled）
-    static var expandedSize: CGSize {
-        FeatureFlags.shelfEnabled
-            ? CGSize(width: 640, height: 220)
-            : CGSize(width: 300, height: 280)
-    }
+    /// 展开面板尺寸（多页共用：横向滑动、每页等宽）
+    static let expandedSize = CGSize(width: 340, height: 300)
 
     static func collapsedWindowRect(notch: CGRect) -> CGRect {
         CGRect(x: notch.minX - chipWidth,

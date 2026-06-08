@@ -6,6 +6,7 @@ struct IslandRootView: View {
     @ObservedObject var musicVM: MusicViewModel
     @ObservedObject var shelf: ShelfStore
     @ObservedObject var audioVM: AudioOutputViewModel
+    @ObservedObject var pages: IslandPagesModel
     let notchSize: CGSize
 
     @State private var dropTargeted = false
@@ -27,18 +28,20 @@ struct IslandRootView: View {
         // 文件拖到岛的任何位置：悬停 → dropTarget 态展开；松手 → 入架
         // 文件架下线时整块关闭，拖文件到刘海不再触发任何状态切换
         .modifier(ShelfDropTarget(
-            enabled: FeatureFlags.shelfEnabled,
             targeted: $dropTargeted,
             onDrop: { providers in
-                // 同步切换状态：不依赖异步解析的时序，松手即保持展开
                 viewModel.send(.dropCompleted)
+                pages.go(to: .shelf)
                 Self.loadFileURLs(from: providers) { urls in
                     let rejected = shelf.add(urls: urls)
                     if !rejected.isEmpty { shakeTrigger += 1 }   // 满架抖动
                 }
                 return true
             },
-            onTargetChange: { viewModel.setDragTargeted($0) }))
+            onTargetChange: { targeted in
+                viewModel.setDragTargeted(targeted)
+                if targeted { pages.go(to: .shelf) }
+            }))
     }
 
     @ViewBuilder
@@ -47,12 +50,13 @@ struct IslandRootView: View {
         case .collapsed:
             CollapsedIslandView(notchSize: notchSize, musicVM: musicVM)
         case .expanded, .dropTarget:
-            ExpandedPanelView(musicVM: musicVM,
-                              shelf: shelf,
-                              audioVM: audioVM,
-                              isDropTarget: viewModel.state == .dropTarget,
-                              shakeTrigger: shakeTrigger,
-                              notchHeight: notchSize.height)
+            PagedPanelView(musicVM: musicVM,
+                           audioVM: audioVM,
+                           shelf: shelf,
+                           pages: pages,
+                           isDropTarget: viewModel.state == .dropTarget,
+                           shakeTrigger: shakeTrigger,
+                           notchHeight: notchSize.height)
         }
     }
 
@@ -77,22 +81,15 @@ struct IslandRootView: View {
     }
 }
 
-/// 把文件投放整块行为收进一个开关：enabled=false 时既不接收拖拽也不切 dropTarget 态
+/// 文件投放：始终接收，落点在岛任意位置即可（onDrop 在整窗外层，hover 在 islandContent）
 private struct ShelfDropTarget: ViewModifier {
-    let enabled: Bool
     @Binding var targeted: Bool
     let onDrop: ([NSItemProvider]) -> Bool
     let onTargetChange: (Bool) -> Void
 
     func body(content: Content) -> some View {
-        Group {
-            if enabled {
-                content
-                    .onDrop(of: [.fileURL], isTargeted: $targeted, perform: onDrop)
-                    .onChange(of: targeted) { _, t in onTargetChange(t) }
-            } else {
-                content
-            }
-        }
+        content
+            .onDrop(of: [.fileURL], isTargeted: $targeted, perform: onDrop)
+            .onChange(of: targeted) { _, t in onTargetChange(t) }
     }
 }

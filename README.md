@@ -1,9 +1,6 @@
 # lindongdao 灵动岛
 
-macOS 灵动岛：悬停刘海展开音乐面板（Apple Music / Spotify）。
-
-> 当前版本专注音乐。文件中转站已实现但暂时下线（代码保留，把
-> `FeatureFlags.shelfEnabled` 改回 `true` 即可恢复）。
+macOS 灵动岛：悬停刘海展开，左右滑切换音乐页 / 文件中转站页。
 
 ## 运行（开发）
 

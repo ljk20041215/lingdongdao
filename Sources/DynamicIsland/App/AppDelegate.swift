@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let musicVM = MusicViewModel(provider: AppleScriptMusicProvider())
     private let shelf = ShelfStore()
     private let audioVM = AudioOutputViewModel(provider: CoreAudioOutputProvider())
+    private let pages = IslandPagesModel()
     private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -24,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             musicVM: musicVM,
             shelf: shelf,
             audioVM: audioVM,
+            pages: pages,
             notchSize: geometry.notchRect.size))
         self.controller = controller
 
