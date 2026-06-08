@@ -21,8 +21,10 @@ struct ExpandedPanelView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
         .padding(.top, notchHeight + 4)
-        .frame(width: IslandLayout.expandedSize.width,
-               height: IslandLayout.expandedSize.height - 16)
+        // 宽度填满窗口（= max(300, 刘海+两翼)），与收起态小岛同宽，
+        // 收起时不再「忽然变宽一点点」（刘海较宽时小岛本比固定 300 宽）
+        .frame(maxWidth: .infinity)
+        .frame(height: IslandLayout.expandedSize.height - 16)
         .background(Color.black)
         .clipShape(.rect(bottomLeadingRadius: 24, bottomTrailingRadius: 24))
         .modifier(ShakeEffect(trigger: CGFloat(shakeTrigger)))

@@ -13,18 +13,17 @@ struct IslandRootView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 弹簧只作用在内容切换上，不作用在填满窗口的外层 frame：
-            // 这样窗口缩放（透明、不可见）永远是瞬时的，只有岛内容在动 →
-            // 无论窗口此前是 32 还是 200 高，展开动画都一模一样（根治时快时慢/忽上忽下）
+            // 悬停区贴着可见的岛本身（收起态=小岛，展开态=面板），不覆盖整个窗口：
+            // 收起后窗口要等 0.4s 才缩小，期间面板原位的透明区不应再触发展开
             islandContent
-                // dampingFraction 1.0 = 临界阻尼、无过冲：收起时高度不会越过 32 再弹回，
-                // 根治「收起后又忽然变大一点点」（欠阻尼弹簧在收缩末端的回弹）
+                .contentShape(Rectangle())
+                .onHover { viewModel.setHovered($0) }
+                // 弹簧只作用在内容切换上：窗口缩放（透明）瞬时，只有岛内容在动，
+                // 临界阻尼 1.0 无过冲，收起不回弹
                 .animation(.spring(response: 0.34, dampingFraction: 1.0), value: viewModel.state)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .contentShape(Rectangle())
-        .onHover { viewModel.setHovered($0) }
         // 文件拖到岛的任何位置：悬停 → dropTarget 态展开；松手 → 入架
         // 文件架下线时整块关闭，拖文件到刘海不再触发任何状态切换
         .modifier(ShelfDropTarget(
