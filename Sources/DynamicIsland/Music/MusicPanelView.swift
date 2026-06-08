@@ -3,18 +3,25 @@ import SwiftUI
 /// 展开面板左侧的音乐区
 struct MusicPanelView: View {
     @ObservedObject var musicVM: MusicViewModel
+    @ObservedObject var audioVM: AudioOutputViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if musicVM.needsAutomationPermission {
-                permissionHint
-            } else if let info = musicVM.info {
-                playingContent(info)
-            } else {
-                notPlaying
+            Group {
+                if musicVM.needsAutomationPermission {
+                    permissionHint
+                } else if let info = musicVM.info {
+                    playingContent(info)
+                } else {
+                    notPlaying
+                }
             }
+            .frame(maxHeight: .infinity, alignment: .top)
+            Divider().overlay(.gray.opacity(0.25))
+            AudioDeviceRow(audioVM: audioVM)
         }
         .frame(width: 240, alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .leading)
     }
 
     private func playingContent(_ info: NowPlayingInfo) -> some View {

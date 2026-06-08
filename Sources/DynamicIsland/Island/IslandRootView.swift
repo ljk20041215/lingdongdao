@@ -5,6 +5,7 @@ struct IslandRootView: View {
     @ObservedObject var viewModel: IslandViewModel
     @ObservedObject var musicVM: MusicViewModel
     @ObservedObject var shelf: ShelfStore
+    @ObservedObject var audioVM: AudioOutputViewModel
     let notchSize: CGSize
 
     @State private var dropTargeted = false
@@ -49,6 +50,7 @@ struct IslandRootView: View {
         case .expanded, .dropTarget:
             ExpandedPanelView(musicVM: musicVM,
                               shelf: shelf,
+                              audioVM: audioVM,
                               isDropTarget: viewModel.state == .dropTarget,
                               shakeTrigger: shakeTrigger,
                               notchHeight: notchSize.height)

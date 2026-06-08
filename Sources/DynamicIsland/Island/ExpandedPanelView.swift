@@ -3,6 +3,7 @@ import SwiftUI
 struct ExpandedPanelView: View {
     @ObservedObject var musicVM: MusicViewModel
     @ObservedObject var shelf: ShelfStore
+    @ObservedObject var audioVM: AudioOutputViewModel
     let isDropTarget: Bool
     let shakeTrigger: Int
     /// 物理刘海高度：内容上方留出这么多，避免封面/文字被刘海遮挡。
@@ -11,7 +12,7 @@ struct ExpandedPanelView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            MusicPanelView(musicVM: musicVM)
+            MusicPanelView(musicVM: musicVM, audioVM: audioVM)
             if FeatureFlags.shelfEnabled {
                 Divider().overlay(.gray.opacity(0.4))
                 ShelfPanelView(store: shelf, isDropTarget: isDropTarget)
