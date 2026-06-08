@@ -6,10 +6,19 @@ final class CoreAudioOutputProvider: AudioOutputProviding {
     var onChange: (() -> Void)?
 
     private let systemObject = AudioObjectID(kAudioObjectSystemObject)
+    /// 已注册的监听（地址 + 同一 block 引用），deinit 时按原引用注销，避免悬挂注册
+    private var listeners: [(AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
 
     init() {
         addListener(kAudioHardwarePropertyDevices)
         addListener(kAudioHardwarePropertyDefaultOutputDevice)
+    }
+
+    deinit {
+        for (addr, block) in listeners {
+            var a = addr
+            AudioObjectRemovePropertyListenerBlock(systemObject, &a, DispatchQueue.main, block)
+        }
     }
 
     func outputDevices() -> [AudioDevice] {
@@ -24,7 +33,8 @@ final class CoreAudioOutputProvider: AudioOutputProviding {
         var id = AudioDeviceID(0)
         var size = UInt32(MemoryLayout<AudioDeviceID>.size)
         let status = AudioObjectGetPropertyData(systemObject, &addr, 0, nil, &size, &id)
-        return status == noErr ? id : nil
+        // id==0 即 kAudioObjectUnknown（设备切换瞬间可能短暂无默认输出），按"无"处理
+        return (status == noErr && id != 0) ? id : nil
     }
 
     func setDefault(_ id: AudioDeviceID) {
@@ -76,8 +86,8 @@ final class CoreAudioOutputProvider: AudioOutputProviding {
 
     private func addListener(_ selector: AudioObjectPropertySelector) {
         var addr = address(selector)
-        AudioObjectAddPropertyListenerBlock(systemObject, &addr, DispatchQueue.main) { [weak self] _, _ in
-            self?.onChange?()
-        }
+        let block: AudioObjectPropertyListenerBlock = { [weak self] _, _ in self?.onChange?() }
+        AudioObjectAddPropertyListenerBlock(systemObject, &addr, DispatchQueue.main, block)
+        listeners.append((addr, block))
     }
 }
