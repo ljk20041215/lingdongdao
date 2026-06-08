@@ -12,4 +12,6 @@ struct NowPlayingInfo: Equatable {
     var positionSec: Double
     var durationSec: Double
     var artworkURL: URL?   // Spotify 提供；Music 封面走单独的数据查询
+    var shuffle: Bool?     // nil = 未知/读取失败
+    var repeatMode: RepeatMode?
 }
