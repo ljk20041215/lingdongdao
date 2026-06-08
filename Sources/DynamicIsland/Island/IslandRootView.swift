@@ -50,7 +50,8 @@ struct IslandRootView: View {
             ExpandedPanelView(musicVM: musicVM,
                               shelf: shelf,
                               isDropTarget: viewModel.state == .dropTarget,
-                              shakeTrigger: shakeTrigger)
+                              shakeTrigger: shakeTrigger,
+                              notchHeight: notchSize.height)
         }
     }
 

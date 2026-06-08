@@ -8,7 +8,7 @@ enum IslandLayout {
     static var expandedSize: CGSize {
         FeatureFlags.shelfEnabled
             ? CGSize(width: 640, height: 220)
-            : CGSize(width: 300, height: 200)
+            : CGSize(width: 300, height: 230)
     }
 
     static func collapsedWindowRect(notch: CGRect) -> CGRect {
