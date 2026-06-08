@@ -33,10 +33,13 @@ struct MusicPanelView: View {
                 }
             }
             progressBar(info)
-            HStack(spacing: 28) {
+            HStack(spacing: 18) {
+                modeButton("shuffle", active: info.shuffle == true) { musicVM.toggleShuffle() }
                 controlButton("backward.fill") { musicVM.previousTrack() }
                 controlButton(info.isPlaying ? "pause.fill" : "play.fill") { musicVM.playPause() }
                 controlButton("forward.fill") { musicVM.nextTrack() }
+                modeButton(repeatSymbol(info.repeatMode),
+                           active: (info.repeatMode ?? .off) != .off) { musicVM.cycleRepeat() }
             }
             .frame(maxWidth: .infinity)
         }
@@ -102,6 +105,20 @@ struct MusicPanelView: View {
             Image(systemName: symbol)
                 .font(.system(size: 16))
                 .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func repeatSymbol(_ mode: RepeatMode?) -> String {
+        (mode ?? .off) == .one ? "repeat.1" : "repeat"
+    }
+
+    /// 模式按钮：激活时绿色，关闭时白色
+    private func modeButton(_ symbol: String, active: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 13))
+                .foregroundStyle(active ? Color.green : Color.white)
         }
         .buttonStyle(.plain)
     }
