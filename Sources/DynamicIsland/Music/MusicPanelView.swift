@@ -32,15 +32,24 @@ struct MusicPanelView: View {
                         .lineLimit(1)
                 }
             }
-            ProgressView(value: min(info.positionSec, info.durationSec),
-                         total: max(info.durationSec, 1))
-                .tint(.white)
+            progressBar(info)
             HStack(spacing: 28) {
                 controlButton("backward.fill") { musicVM.previousTrack() }
                 controlButton(info.isPlaying ? "pause.fill" : "play.fill") { musicVM.playPause() }
                 controlButton("forward.fill") { musicVM.nextTrack() }
             }
             .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// 进度条：每 0.2 秒按墙钟向前推进（仅播放时），两次轮询之间不再跳着走。
+    /// 面板只在展开时可见，故 TimelineView 只在悬停期间运转，无后台开销。
+    private func progressBar(_ info: NowPlayingInfo) -> some View {
+        TimelineView(.animation(minimumInterval: 0.2, paused: !info.isPlaying)) { context in
+            let elapsed = context.date.timeIntervalSince(musicVM.syncedAt)
+            ProgressView(value: PlaybackProgress.position(base: info, elapsed: elapsed),
+                         total: max(info.durationSec, 1))
+                .tint(.white)
         }
     }
 
