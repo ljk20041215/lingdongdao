@@ -39,4 +39,28 @@ final class NowPlayingParserTests: XCTestCase {
         XCTAssertNil(NowPlayingParser.parse("t\na\ninf\n200\nplaying\n", source: .music))
         XCTAssertNil(NowPlayingParser.parse("t\na\n-5\n200\nplaying\n", source: .music))
     }
+
+    func testParsesSpotifyShuffleAndRepeat() {
+        // Spotify 第 7 行 shuffling、第 8 行 repeating，均为 true/false
+        let raw = "S\nA\n10\n200\nplaying\nhttps://x\ntrue\ntrue"
+        let info = NowPlayingParser.parse(raw, source: .spotify)
+        XCTAssertEqual(info?.shuffle, true)
+        XCTAssertEqual(info?.repeatMode, .all)   // Spotify true → all
+    }
+
+    func testParsesMusicShuffleAndRepeat() {
+        // Music 第 6 行空（封面占位）、第 7 行 shuffle、第 8 行 song repeat
+        let raw = "S\nA\n10\n200\nplaying\n\nfalse\none"
+        let info = NowPlayingParser.parse(raw, source: .music)
+        XCTAssertEqual(info?.shuffle, false)
+        XCTAssertEqual(info?.repeatMode, .one)
+    }
+
+    func testMissingShuffleRepeatStaysNil() {
+        // 旧的 6 行输出：shuffle/repeat 应为 nil，不影响其余解析
+        let raw = "S\nA\n10\n200\nplaying\n"
+        let info = NowPlayingParser.parse(raw, source: .music)
+        XCTAssertNil(info?.shuffle)
+        XCTAssertNil(info?.repeatMode)
+    }
 }
