@@ -11,7 +11,9 @@ final class IslandLayoutTests: XCTestCase {
 
     func testExpandedWindowIsCenteredUnderNotchTop() {
         let r = IslandLayout.expandedWindowRect(notch: notch)
-        XCTAssertEqual(r.width, IslandLayout.expandedSize.width)
+        // 宽度取「面板宽」与「刘海+两翼」的较大者：面板比刘海窄时也绝不露出刘海两侧
+        XCTAssertEqual(r.width, max(IslandLayout.expandedSize.width,
+                                    notch.width + IslandLayout.chipWidth * 2))
         XCTAssertEqual(r.height, IslandLayout.expandedSize.height)
         XCTAssertEqual(r.midX, notch.midX)            // 水平居中对齐刘海
         XCTAssertEqual(r.maxY, notch.maxY)            // 顶边贴屏幕顶

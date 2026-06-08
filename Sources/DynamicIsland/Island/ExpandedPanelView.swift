@@ -9,8 +9,10 @@ struct ExpandedPanelView: View {
     var body: some View {
         HStack(spacing: 16) {
             MusicPanelView(musicVM: musicVM)
-            Divider().overlay(.gray.opacity(0.4))
-            ShelfPanelView(store: shelf, isDropTarget: isDropTarget)
+            if FeatureFlags.shelfEnabled {
+                Divider().overlay(.gray.opacity(0.4))
+                ShelfPanelView(store: shelf, isDropTarget: isDropTarget)
+            }
         }
         .padding(20)
         .frame(width: IslandLayout.expandedSize.width,
