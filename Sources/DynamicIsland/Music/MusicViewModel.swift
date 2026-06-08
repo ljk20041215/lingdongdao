@@ -30,4 +30,13 @@ final class MusicViewModel: ObservableObject {
     func playPause() { provider.playPause() }
     func nextTrack() { provider.nextTrack() }
     func previousTrack() { provider.previousTrack() }
+
+    func toggleShuffle() {
+        provider.setShuffle(!(info?.shuffle ?? false))
+    }
+
+    func cycleRepeat() {
+        let current = info?.repeatMode ?? .off
+        provider.setRepeat(current.next(supportsOne: info?.source == .music))
+    }
 }

@@ -11,4 +11,6 @@ protocol NowPlayingProvider: AnyObject {
     func playPause()
     func nextTrack()
     func previousTrack()
+    func setShuffle(_ on: Bool)
+    func setRepeat(_ mode: RepeatMode)
 }

@@ -40,6 +40,21 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
     func nextTrack() { control("next track") }
     func previousTrack() { control("previous track") }
 
+    func setShuffle(_ on: Bool) {
+        control(isRunning(Self.spotifyBundleID)
+            ? "set shuffling to \(on)"
+            : "set shuffle enabled to \(on)")
+    }
+
+    func setRepeat(_ mode: RepeatMode) {
+        if isRunning(Self.spotifyBundleID) {
+            control("set repeating to \(mode != .off)")
+        } else {
+            // mode.rawValue（off/all/one）作为裸词注入，即 AppleScript 的 song repeat 常量
+            control("set song repeat to \(mode.rawValue)")
+        }
+    }
+
     private func control(_ command: String) {
         queue.async { [weak self] in
             guard let self, let app = self.activePlayerApp() else { return }
@@ -140,13 +155,13 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
 
     // MARK: - 脚本
 
-    /// Spotify duration 单位是毫秒，这里换算成秒
+    /// Spotify duration 单位是毫秒，这里换算成秒；末两行为随机/循环（均布尔）
     static let spotifyScript = """
     try
         tell application "Spotify"
             if player state is stopped then return ""
             set t to current track
-            return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & ((duration of t) / 1000 as text) & "\\n" & (player state as text) & "\\n" & artwork url of t
+            return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & ((duration of t) / 1000 as text) & "\\n" & (player state as text) & "\\n" & artwork url of t & "\\n" & (shuffling as text) & "\\n" & (repeating as text)
         end tell
     on error msg number n
         if n is -1743 then return "PERM_DENIED"
@@ -159,7 +174,10 @@ final class AppleScriptMusicProvider: NowPlayingProvider {
         tell application "Music"
             if player state is stopped then return ""
             set t to current track
-            return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & (duration of t as text) & "\\n" & (player state as text) & "\\n"
+            set rpt to "off"
+            if (song repeat is one) then set rpt to "one"
+            if (song repeat is all) then set rpt to "all"
+            return name of t & "\\n" & artist of t & "\\n" & (player position as text) & "\\n" & (duration of t as text) & "\\n" & (player state as text) & "\\n" & "" & "\\n" & (shuffle enabled as text) & "\\n" & rpt
         end tell
     on error msg number n
         if n is -1743 then return "PERM_DENIED"
