@@ -1,7 +1,9 @@
 import AppKit
 
 /// 覆盖刘海的无边框透明面板。
-/// 关键点：层级高于菜单栏（screenSaver）、加入所有空间、全屏辅助 → 全屏应用下依然可见。
+/// 层级用 statusBar（高于菜单栏、覆盖刘海）：不能用 screenSaver——那是 CGShieldingWindowLevel，
+/// 系统会把该层级的窗口排除在拖放(drag & drop)之外，导致拖文件到岛收不到事件。
+/// 代价：statusBar 低于全屏应用层级，全屏下可能被盖住（拖放可用性优先）。
 final class NotchWindow: NSPanel {
     init(contentRect: CGRect) {
         super.init(contentRect: contentRect,
@@ -9,7 +11,7 @@ final class NotchWindow: NSPanel {
                    backing: .buffered,
                    defer: false)
         isFloatingPanel = true
-        level = .screenSaver
+        level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         backgroundColor = .clear
         isOpaque = false

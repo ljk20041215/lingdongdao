@@ -8,12 +8,12 @@ struct PagedPanelView: View {
     @ObservedObject var shelf: ShelfStore
     @ObservedObject var pages: IslandPagesModel
     let isDropTarget: Bool
-    let shakeTrigger: Int
     let notchHeight: CGFloat
+    let panelWidth: CGFloat          // = 窗口宽 = 刘海+两翼，与收起态同宽
 
     @State private var monitor: SwipeMonitor?
 
-    private var pageWidth: CGFloat { IslandLayout.expandedSize.width }
+    private var pageWidth: CGFloat { panelWidth }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -21,8 +21,8 @@ struct PagedPanelView: View {
                 MusicPanelView(musicVM: musicVM, audioVM: audioVM)
                     .frame(width: pageWidth)
                 ShelfPanelView(store: shelf, isDropTarget: isDropTarget)
-                    .modifier(ShakeEffect(trigger: CGFloat(shakeTrigger)))
-                    .animation(.linear(duration: 0.4), value: shakeTrigger)
+                    .modifier(ShakeEffect(trigger: CGFloat(shelf.rejectBump)))
+                    .animation(.linear(duration: 0.4), value: shelf.rejectBump)
                     .frame(width: pageWidth)
             }
             .frame(width: pageWidth, alignment: .leading)
@@ -39,7 +39,7 @@ struct PagedPanelView: View {
         .padding(.bottom, 10)
         .padding(.top, notchHeight + 4)
         .frame(maxWidth: .infinity)
-        .frame(height: IslandLayout.expandedSize.height - 16)
+        .frame(height: IslandLayout.expandedHeight - 16)
         .background(Color.black)
         .clipShape(.rect(bottomLeadingRadius: 24, bottomTrailingRadius: 24))
         .onAppear {

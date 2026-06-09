@@ -6,6 +6,8 @@ final class ShelfStore: ObservableObject {
     static let maxItems = 10
 
     @Published private(set) var items: [ShelfItem] = []
+    /// 有文件因满架被拒时自增，驱动「满架抖动」动画（与投放路径解耦，AppKit/SwiftUI 都能触发）
+    @Published private(set) var rejectBump = 0
 
     private let storeURL: URL
     private let fileExists: (URL) -> Bool
@@ -34,6 +36,7 @@ final class ShelfStore: ObservableObject {
             }
             items.append(ShelfItem(id: UUID(), url: url, addedAt: Date()))
         }
+        if !rejected.isEmpty { rejectBump += 1 }
         save()
         return rejected
     }

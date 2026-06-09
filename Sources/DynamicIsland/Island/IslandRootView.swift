@@ -1,5 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct IslandRootView: View {
     @ObservedObject var viewModel: IslandViewModel
@@ -8,9 +7,6 @@ struct IslandRootView: View {
     @ObservedObject var audioVM: AudioOutputViewModel
     @ObservedObject var pages: IslandPagesModel
     let notchSize: CGSize
-
-    @State private var dropTargeted = false
-    @State private var shakeTrigger = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,71 +21,25 @@ struct IslandRootView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 文件拖到岛的任何位置：悬停 → dropTarget 态展开；松手 → 入架
-        // 文件架下线时整块关闭，拖文件到刘海不再触发任何状态切换
-        .modifier(ShelfDropTarget(
-            targeted: $dropTargeted,
-            onDrop: { providers in
-                viewModel.send(.dropCompleted)
-                pages.go(to: .shelf)
-                Self.loadFileURLs(from: providers) { urls in
-                    let rejected = shelf.add(urls: urls)
-                    if !rejected.isEmpty { shakeTrigger += 1 }   // 满架抖动
-                }
-                return true
-            },
-            onTargetChange: { targeted in
-                viewModel.setDragTargeted(targeted)
-                if targeted { pages.go(to: .shelf) }
-            }))
+        // 文件投放在 AppKit 层接收（见 FileDropView / IslandWindowController），不再用 SwiftUI onDrop
     }
 
     @ViewBuilder
     private var islandContent: some View {
         switch viewModel.state {
         case .collapsed:
-            CollapsedIslandView(notchSize: notchSize, musicVM: musicVM)
+            CollapsedIslandView(notchSize: notchSize,
+                                musicVM: musicVM,
+                                shelf: shelf,
+                                pages: pages)
         case .expanded, .dropTarget:
             PagedPanelView(musicVM: musicVM,
                            audioVM: audioVM,
                            shelf: shelf,
                            pages: pages,
                            isDropTarget: viewModel.state == .dropTarget,
-                           shakeTrigger: shakeTrigger,
-                           notchHeight: notchSize.height)
+                           notchHeight: notchSize.height,
+                           panelWidth: notchSize.width + IslandLayout.chipWidth * 2)
         }
-    }
-
-    /// NSItemProvider 异步取出文件 URL；忽略非文件内容（spec：只接受文件）
-    static func loadFileURLs(from providers: [NSItemProvider],
-                             completion: @escaping ([URL]) -> Void) {
-        let group = DispatchGroup()
-        var urls: [URL] = []
-        let lock = NSLock()
-        for provider in providers
-        where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
-            group.enter()
-            provider.loadDataRepresentation(forTypeIdentifier: UTType.fileURL.identifier) { data, _ in
-                defer { group.leave() }
-                guard let data, let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
-                lock.lock()
-                urls.append(url)
-                lock.unlock()
-            }
-        }
-        group.notify(queue: .main) { completion(urls) }
-    }
-}
-
-/// 文件投放：始终接收，落点在岛任意位置即可（onDrop 在整窗外层，hover 在 islandContent）
-private struct ShelfDropTarget: ViewModifier {
-    @Binding var targeted: Bool
-    let onDrop: ([NSItemProvider]) -> Bool
-    let onTargetChange: (Bool) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .onDrop(of: [.fileURL], isTargeted: $targeted, perform: onDrop)
-            .onChange(of: targeted) { _, t in onTargetChange(t) }
     }
 }
