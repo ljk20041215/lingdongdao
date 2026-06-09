@@ -4,12 +4,8 @@ import Foundation
 enum IslandLayout {
     /// 收起态每侧露出的"翼"宽度（迷你封面 / 波形）
     static let chipWidth: CGFloat = 56
-    /// 展开面板尺寸。文件架下线时只放音乐，面板收窄（见 FeatureFlags.shelfEnabled）
-    static var expandedSize: CGSize {
-        FeatureFlags.shelfEnabled
-            ? CGSize(width: 640, height: 220)
-            : CGSize(width: 300, height: 280)
-    }
+    /// 展开面板高度（宽度与收起态同宽，见 expandedWindowRect：收起/展开只变高不变宽）
+    static let expandedHeight: CGFloat = 300
 
     static func collapsedWindowRect(notch: CGRect) -> CGRect {
         CGRect(x: notch.minX - chipWidth,
@@ -19,11 +15,12 @@ enum IslandLayout {
     }
 
     static func expandedWindowRect(notch: CGRect) -> CGRect {
-        let width = max(expandedSize.width, notch.width + chipWidth * 2)
-        return CGRect(x: notch.midX - width / 2,
-                      y: notch.maxY - expandedSize.height,
+        // 与收起态同宽（刘海+两翼）、同 x：收起/展开是纯高度变化，无横向跳变（根治"收起忽然变宽/抖动"）
+        let width = notch.width + chipWidth * 2
+        return CGRect(x: notch.minX - chipWidth,
+                      y: notch.maxY - expandedHeight,
                       width: width,
-                      height: expandedSize.height)
+                      height: expandedHeight)
     }
 
     static func windowRect(for state: IslandState, notch: CGRect) -> CGRect {

@@ -16,8 +16,21 @@ final class IslandWindowController {
             contentRect: IslandLayout.collapsedWindowRect(notch: geometry.notchRect))
     }
 
-    func show<Content: View>(content: Content) {
-        window.contentView = NSHostingView(rootView: content)
+    /// 文件投放在 AppKit 层接收（见 FileDropView）；SwiftUI 内容叠在其上正常处理鼠标/滚动。
+    func show<Content: View>(content: Content,
+                             onDragTargeted: @escaping (Bool) -> Void,
+                             onDropFiles: @escaping ([URL]) -> Void) {
+        let dropView = FileDropView(onTargeted: onDragTargeted, onDrop: onDropFiles)
+        window.contentView = dropView
+        let host = NSHostingView(rootView: content)
+        host.translatesAutoresizingMaskIntoConstraints = false
+        dropView.addSubview(host)
+        NSLayoutConstraint.activate([      // 钉满 dropView，随窗口缩放原子同步，避免收起时抖动
+            host.leadingAnchor.constraint(equalTo: dropView.leadingAnchor),
+            host.trailingAnchor.constraint(equalTo: dropView.trailingAnchor),
+            host.topAnchor.constraint(equalTo: dropView.topAnchor),
+            host.bottomAnchor.constraint(equalTo: dropView.bottomAnchor),
+        ])
         window.orderFrontRegardless()
     }
 
